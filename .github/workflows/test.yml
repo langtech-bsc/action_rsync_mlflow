@@ -11,6 +11,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: langtech-bsc/rsync_mlflow@main
+        with:
+          name: ${GITHUB_REPOSITORY#$GITHUB_REPOSITORY_OWNER/}
+          host: ${{ secrets.REMOTE_HOST }}
+          user: ${{ secrets.REMOTE_USER }}
+          experiment_name: ${{ secrets.REMOTE_GROUP }}
+          run_name: 123456 
+          url: ${{ env.MLFLOW_TRACKING_SERVER_URL }}
+          task: "start"
       
 
     

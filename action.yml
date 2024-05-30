@@ -24,10 +24,11 @@ inputs:
 
   
 runs:
-  using: "composit"
+  using: "composite"
   steps:
-    - name: Do nothing
-      run: |
-        echo "hola"
-
+    - uses: actions/checkout@v4
+    - name: Start
+      if: ${{ inputs.task }} == 'start'
+      run: ls
+        
   
