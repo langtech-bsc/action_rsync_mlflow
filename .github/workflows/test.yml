@@ -1,0 +1,16 @@
+name: Test mlflow action
+run-name: ${{ github.actor }} is executing test mlflow action 🚀
+
+on:
+  workflow_dispatch:
+  
+jobs:
+  test:
+    runs-on: ubuntu-latest
+      
+    steps:
+      - uses: actions/checkout@v4
+      - uses: langtech-bsc/rsync_mlflow@main
+      
+
+    

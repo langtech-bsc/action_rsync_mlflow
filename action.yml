@@ -1,0 +1,33 @@
+name: 'Sync cluster to mlflow'
+
+inputs:
+  name:
+    description: 'Job name'
+    required: true
+  host:
+    description: 'Remote Host'
+    required: true
+  user:
+    description: 'Remote User'
+    required: true
+  experiment_name:
+    description: 'Name for experiment'
+    required: true
+  run_name:
+    description: "Name for run"
+    required: true
+  url:
+    description: "Mlflow tracking url"
+    required: true
+  task:
+    description: "Mlflow task [schedule, sync, stop]"
+
+  
+runs:
+  using: "composit"
+  steps:
+    - name: Do nothing
+      run: |
+        echo "hola"
+
+  
