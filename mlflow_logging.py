@@ -52,7 +52,7 @@ class MlflowLogging():
 
     def get_artifact_url(self, run_id):
         run = mlflow.get_run(run_id=run_id)
-        print(f"{mlflow.get_tracking_uri()}/#/experiments/{run.info.experiment_id}/runs/{run.info.run_id}/artifacts")
+        return f"{mlflow.get_tracking_uri()}/#/experiments/{run.info.experiment_id}/runs/{run.info.run_id}/artifacts"
 
     def stop(self, remote_user, remote_host, source, destination, run_id, failed=False):
         mlflow.start_run(run_id=run_id)
@@ -65,7 +65,7 @@ class MlflowLogging():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Mlflow logging')
-    parser.add_argument('-t', '--task', required=True ,help='Permited tasks: [schedule, sync, stop]')
+    parser.add_argument('-t', '--task', required=True, choices=["schedule", "sync", "stop", "artifact_url"], help='Permited tasks: [schedule, sync, stop, artifact_url]')
     parser.add_argument('--url', required=True ,help='Traking url')
     parser.add_argument('-e', '--experiment', required=True ,help='Experiment Name')
     parser.add_argument('-n', '--run_name', required=False ,help='Experiment Name')
@@ -80,9 +80,12 @@ if __name__ == '__main__':
     if args.task == 'schedule':
         run_id = client.schedule(args.run_name)
         print(run_id)
-    if args.task == 'sync':
+    elif args.task == 'sync':
         client.syncloop(args.user, args.host, args.src, destination_dir, args.run_id)
-    if args.task == 'stop':
+    elif args.task == 'stop':
         client.stop(args.user, args.host, args.src, destination_dir, args.run_id)
+    elif args.task == 'artifact_url':
+        url = client.get_artifact_url(args.run_id)
+        print(url)
 
 

@@ -26,9 +26,15 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - uses: actions/checkout@v4
+    - id: setup-python
+      name: setup python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+        architecture: 'x64'
+
     - name: Start
       if: ${{ inputs.task }} == 'start'
-      run: ls
+      run: ls ${{ github.action_path }}
         
   
