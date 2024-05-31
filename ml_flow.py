@@ -16,8 +16,8 @@ variables_name = {
     "experiment": "EXPERIMENT",
     "run_name": "RUN_NAME",
     "run_id": "RUN_ID",
-    "user": "REMOTE_HOST",
-    "host": "REMOTE_USER",
+    "user": "REMOTE_USER",
+    "host": "REMOTE_HOST",
     "src": "REMOTE_SOURCE_PATH",
     "destination": "DESTINATION",
 }
