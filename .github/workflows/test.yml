@@ -6,19 +6,31 @@ on:
   
 jobs:
   test:
+    env:
+      JOB_PATH: /gpfs/scratch/${{ secrets.REMOTE_GROUP }}/${{ secrets.REMOTE_USER }}/jobs/${GITHUB_REPOSITORY#$GITHUB_REPOSITORY_OWNER/}/${{ github.run_id }}
+      MLFLOW_TRACKING_SERVER_URL: https://jobs.mlflow.dev.aina.bsc.es
     runs-on: ubuntu-latest
       
     steps:
       - uses: actions/checkout@v4
-      - uses: ./
-        with:
-          name: ${GITHUB_REPOSITORY#$GITHUB_REPOSITORY_OWNER/}
-          host: ${{ secrets.REMOTE_HOST }}
-          user: ${{ secrets.REMOTE_USER }}
-          experiment_name: ${{ secrets.REMOTE_GROUP }}
-          run_name: 123456 
-          url: ${{ env.MLFLOW_TRACKING_SERVER_URL }}
-          task: "start"
       
+      - name: Setup mlflow
+        id: mlflow
+        uses: ./
+        with:
+          experiment_name: ${GITHUB_REPOSITORY#$GITHUB_REPOSITORY_OWNER/}
+          remote_host: ${{ secrets.REMOTE_HOST }}
+          remote_user: ${{ secrets.REMOTE_USER }}
+          remote_source_path: /gpfs/scratch/bsc88/bsc088535/jobs/jupyterlab_apps/9205297804/logs #${{ env.JOB_PATH }}/logs
+          traking_url: 'https://jobs.mlflow.dev.aina.bsc.es' #${{ env.MLFLOW_TRACKING_SERVER_URL }}
+          run_name: 12345 
+          schedule: 'true'
 
+      - name: Get mlflow artifact url
+        run: |
+          echo ${{ steps.mlflow.outputs.artifact_url }}
+
+      - name: Sync mlflow
+        run: |
+          ml_flow -t sync > ${{ steps.mlflow.outputs.sync_dir }}/mlflow.log
     

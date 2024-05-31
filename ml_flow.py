@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import argparse
 from time import sleep
 import sysrsync
@@ -17,12 +19,13 @@ variables_name = {
     "user": "REMOTE_HOST",
     "host": "REMOTE_USER",
     "src": "REMOTE_SOURCE_PATH",
+    "destination": "DESTINATION",
 }
 
 tasks_and_variables = {
     "schedule": ["url", "experiment", "run_name"],
-    "sync": ["url", "experiment", "user", "host", "src", "run_id"],
-    "stop": ["url", "experiment", "user", "host", "src", "run_id"],
+    "sync": ["url", "experiment", "user", "host", "src", "run_id", "destination"],
+    "stop": ["url", "experiment", "user", "host", "src", "run_id", "destination"],
     "artifact_url": ["url", "experiment", "run_id"],
 }
 
@@ -75,34 +78,34 @@ class MlflowLogging():
             traceback.print_exc()
 
     
-    def syncloop(self, remote_user, remote_host, source, sync_dir, run_id):
+    def syncloop(self, remote_user, remote_host, source, destination, run_id):
         mlflow.start_run(run_id=run_id)
         while True:
-            self.sync(remote_user, remote_host, source, sync_dir)
+            self.sync(remote_user, remote_host, source, destination)
             sleep(15)
 
     def get_artifact_url(self, run_id):
         run = mlflow.get_run(run_id=run_id)
         return f"{mlflow.get_tracking_uri()}/#/experiments/{run.info.experiment_id}/runs/{run.info.run_id}/artifacts"
 
-    def stop(self, remote_user, remote_host, source, sync_dir, run_id, failed=False):
+    def stop(self, remote_user, remote_host, source, destination, run_id, failed=False):
         mlflow.start_run(run_id=run_id)
-        self.sync(remote_user, remote_host, source, sync_dir)
+        self.sync(remote_user, remote_host, source, destination)
         if failed:
             mlflow.end_run('FAILED')
         else:
             mlflow.end_run()
 
-def main(task, variables, env_file, sync_dir):
+def main(task, variables, env_file):
     client = MlflowLogging(variables["url"], variables["experiment"])
     if task == 'schedule':
         client.schedule(variables["run_name"], env_file)
     
     elif task == 'sync':
-        client.syncloop(variables["user"], variables["host"], variables["src"], sync_dir, variables["run_id"])
+        client.syncloop(variables["user"], variables["host"], variables["src"], variables["destination"], variables["run_id"])
     
     elif task == 'stop':
-        client.stop(variables["user"], variables["host"], variables["src"], sync_dir, variables["run_id"])
+        client.stop(variables["user"], variables["host"], variables["src"], variables["destination"], variables["run_id"])
     
     elif task == 'artifact_url':
         url = client.get_artifact_url(variables["run_id"])
@@ -113,11 +116,10 @@ if __name__ == '__main__':
     parser.add_argument('-t', '--task', required=True, choices=tasks, help=f'Permited tasks: {tasks}')
     parser.add_argument('-f', '--failed', required=False, default=False, action='store_true' ,help='Experiment Name')
     parser.add_argument('-e', '--env', required=False, default=".env_mlflow", help='Env File')
-    parser.add_argument('-d', '--sync_dir', required=False, default="mlflow_dir", help='Local directory to save remote data on synchronizing')
     args = parser.parse_args()
     variables = get_env_variables(args.env)
     check_variables(args.task, variables, args.env)
-    main(args.task, variables, args.env, args.sync_dir)
+    main(args.task, variables, args.env)
 
     
 
