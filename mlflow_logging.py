@@ -4,16 +4,48 @@ from time import sleep
 from os import environ
 import traceback
 import mlflow
-from dotenv import load_dotenv
+from dotenv import load_dotenv, set_key
+from pathlib import Path
 
-destination_dir = './logs'
+destination_dir = './mlflow_dir'
+
+tasks = ["schedule", "sync", "stop", "artifact_url"]
+
+variables_name = {
+    "url": "TRAKING_URL",
+    "experiment": "EXPERIMENT",
+    "run_name": "RUN_NAME",
+    "run_id": "RUN_ID",
+    "user": "REMOTE_HOST",
+    "host": "REMOTE_USER",
+    "src": "REMOTE_SOURCE_PATH",
+}
+
+tasks_and_variables = {
+    "schedule": ["url", "experiment", "run_name"],
+    "sync": ["url", "experiment", "user", "host", "src", "run_id"],
+    "stop": ["url", "experiment", "user", "host", "src", "run_id"],
+    "artifact_url": ["url", "experiment", "run_id"],
+}
+
+def get_env_variables(file):
+    load_dotenv(Path(file))
+    return { key: environ.get(name, None) 
+            for key, name in variables_name.items() }
+        
+
+def check_variables(task, variables, file):
+    required = [ variables_name[var] for var in tasks_and_variables[task] if not variables[var] ]
+    if len(required) > 0:
+        raise  Exception(f"Missing following variables from the environment file '{file}': {required} ")
+
 
 class MlflowLogging():
     def __init__(self, tracking_uri, experiment_name) -> None:
         mlflow.set_tracking_uri(tracking_uri)
         mlflow.set_experiment(experiment_name)
 
-    def schedule(self, run_name):
+    def schedule(self, run_name, env_file):
         run = mlflow.start_run(run_name=run_name)
         load_dotenv()
         filtered_vars = {name: value for name, value in environ.items() if name.startswith(('JOB_', 'SLURM_', 'GPFS_', 'GITHUB_'))}
@@ -27,6 +59,7 @@ class MlflowLogging():
 
         mlflow.log_params(env_vars)
         mlflow.end_run('SCHEDULED')
+        set_key(Path(env_file), key_to_set="RUN_ID", value_to_set=run.info.run_id)
         return run.info.run_id
 
     def sync(self, remote_user, remote_host, source, destination):
@@ -62,30 +95,32 @@ class MlflowLogging():
         else:
             mlflow.end_run()
 
+def main(task, variables, env_file):
+    client = MlflowLogging(variables["url"], variables["experiment"])
+    if task == 'schedule':
+        client.schedule(variables["run_name"], env_file)
+    
+    elif task == 'sync':
+        client.syncloop(variables["user"], variables["host"], variables["src"], destination_dir, variables["run_id"])
+    
+    elif task == 'stop':
+        client.stop(variables["user"], variables["host"], variables["src"], destination_dir, variables["run_id"])
+    
+    elif task == 'artifact_url':
+        url = client.get_artifact_url(variables["run_id"])
+        print(url)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Mlflow logging')
-    parser.add_argument('-t', '--task', required=True, choices=["schedule", "sync", "stop", "artifact_url"], help='Permited tasks: [schedule, sync, stop, artifact_url]')
-    parser.add_argument('--url', required=True ,help='Traking url')
-    parser.add_argument('-e', '--experiment', required=True ,help='Experiment Name')
-    parser.add_argument('-n', '--run_name', required=False ,help='Experiment Name')
-    parser.add_argument('-i', '--run_id', required=False ,help='Experiment Name')
-    parser.add_argument('-u', '--user', required=False ,help='Remote user')
-    parser.add_argument('--host', required=False ,help='Remote host')
-    parser.add_argument('-s', '--src', required=False ,help='Source files directory')
+    parser.add_argument('-t', '--task', required=True, choices=tasks, help=f'Permited tasks: {tasks}')
     parser.add_argument('-f', '--failed', required=False, default=False, action='store_true' ,help='Experiment Name')
+    parser.add_argument('-e', '--env', required=False, default=".env_mlflow", help='Env File')
     args = parser.parse_args()
     
-    client = MlflowLogging(args.url, args.experiment)
-    if args.task == 'schedule':
-        run_id = client.schedule(args.run_name)
-        print(run_id)
-    elif args.task == 'sync':
-        client.syncloop(args.user, args.host, args.src, destination_dir, args.run_id)
-    elif args.task == 'stop':
-        client.stop(args.user, args.host, args.src, destination_dir, args.run_id)
-    elif args.task == 'artifact_url':
-        url = client.get_artifact_url(args.run_id)
-        print(url)
+    variables = get_env_variables(args.env)
+    check_variables(args.task, variables, args.env)
+    main(args.task, variables, args.env)
+
+    
 
 
