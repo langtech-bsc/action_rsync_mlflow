@@ -65,12 +65,12 @@ class MlflowLogging():
 
     def sync(self, remote_user, remote_host, source, destination):
         try:
-            # sysrsync.run(
-            #         source_ssh=f"{remote_user}@{remote_host}",
-            #         source=source,
-            #         destination=destination,
-            #         strict_host_key_checking=False,
-            #         options=['-avh'])
+            sysrsync.run(
+                    source_ssh=f"{remote_user}@{remote_host}",
+                    source=source,
+                    destination=destination,
+                    strict_host_key_checking=False,
+                    options=['-avh'])
 
             mlflow.log_artifacts(destination)
             
