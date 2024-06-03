@@ -96,7 +96,7 @@ class MlflowLogging():
         else:
             mlflow.end_run()
 
-def main(task, variables, env_file):
+def main(task, variables, env_file, failed):
     client = MlflowLogging(variables["url"], variables["experiment"])
     if task == 'schedule':
         client.schedule(variables["run_name"], env_file)
@@ -105,7 +105,7 @@ def main(task, variables, env_file):
         client.syncloop(variables["user"], variables["host"], variables["src"], variables["destination"], variables["run_id"])
     
     elif task == 'stop':
-        client.stop(variables["user"], variables["host"], variables["src"], variables["destination"], variables["run_id"])
+        client.stop(variables["user"], variables["host"], variables["src"], variables["destination"], variables["run_id"], failed)
     
     elif task == 'artifact_url':
         url = client.get_artifact_url(variables["run_id"])
@@ -119,7 +119,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     variables = get_env_variables(args.env)
     check_variables(args.task, variables, args.env)
-    main(args.task, variables, args.env)
+    main(args.task, variables, args.env, args.failed)
 
     
 
