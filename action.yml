@@ -42,12 +42,14 @@ runs:
         architecture: 'x64'
 
     - name: Install mlflow requirements
+      shell: bash
       run : pip install mlflow sysrsync python-dotenv
 
     - uses: GuillaumeFalourd/setup-rsync@v1.2
     
     - name: Save envs
       id: env
+      shell: bash
       run: |
         echo "TRAKING_URL=${{ inputs.traking_url }}" > .env_mlflow
         echo "EXPERIMENT=${{ inputs.experiment_name }}" >> .env_mlflow
@@ -60,16 +62,19 @@ runs:
         echo "sync_dir=mlflow_dir" >> $GITHUB_OUTPUT
 
     - name: Setup mlflow script
+      shell: bash
       run: |
         cat ${{ github.action_path }}/ml_flow.py | tee ml_flow.py > /dev/null
         chmod +x ml_flow.py
         sudo ln -s $(pwd)/ml_flow.py /usr/bin/ml_flow
 
     - name: Create destination directory
+      shell: bash
       run: mkdir -p ${{steps.env.outputs.sync_dir}}
 
     - name: Schedule
       id: schedule
+      shell: bash
       if: ${{ inputs.schedule == 'true' }} 
       run: |
         ml_flow -t schedule
