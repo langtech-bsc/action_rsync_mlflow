@@ -34,13 +34,6 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - id: setup-python
-      name: setup python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.12'
-        architecture: 'x64'
-
     - name: Install mlflow requirements
       shell: bash
       run : pip install mlflow sysrsync python-dotenv
