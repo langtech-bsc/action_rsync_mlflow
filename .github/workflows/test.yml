@@ -30,7 +30,7 @@ jobs:
         run: |
           echo ${{ steps.mlflow.outputs.artifact_url }}
 
-      - name: Sync mlflow
-        run: |
-          ml_flow -t sync > ${{ steps.mlflow.outputs.sync_dir }}/mlflow.log
+      #- name: Sync mlflow
+      #  run: |
+      #    ml_flow -t sync > ${{ steps.mlflow.outputs.sync_dir }}/mlflow.log
     
