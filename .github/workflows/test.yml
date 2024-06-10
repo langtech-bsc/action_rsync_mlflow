@@ -9,7 +9,7 @@ jobs:
     env:
       JOB_PATH: /gpfs/scratch/${{ secrets.REMOTE_GROUP }}/${{ secrets.REMOTE_USER }}/jobs/${GITHUB_REPOSITORY#$GITHUB_REPOSITORY_OWNER/}/${{ github.run_id }}
       MLFLOW_TRACKING_SERVER_URL: https://jobs.mlflow.dev.aina.bsc.es
-    runs-on: ubuntu-latest
+    runs-on: docker-apps
       
     steps:
       - uses: actions/checkout@v4
