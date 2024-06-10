@@ -47,7 +47,7 @@ class MlflowLogging():
         mlflow.set_experiment(experiment_name)
 
     def schedule(self, run_name, env_file):
-        run = mlflow.start_run(run_name=run_name)
+        run = mlflow.start_run(run_id=run_name)
         load_dotenv()
         filtered_vars = {name: value for name, value in environ.items() if name.startswith(('JOB_', 'SLURM_', 'GPFS_', 'GITHUB_'))}
 
